@@ -4,8 +4,15 @@ from rest_framework.response import Response
 from ...validators.auth.post_register_validator import PostRegisterValidator
 from rest_framework import status
 from django.contrib.auth.models import User
+from rest_framework.authentication import SessionAuthentication
+
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+    def enforce_csrf(self, request: Request):
+        return
 
 class RegisterView(APIView):
+    authentication_classes = (CsrfExemptSessionAuthentication,)
+
     def post(self, request: Request) -> Response:
         validator = PostRegisterValidator(data=request.data)
 
@@ -18,7 +25,7 @@ class RegisterView(APIView):
         validated_data = validator.validated_data
 
         try:
-            user = User.objects.create(
+            user = User.objects.create_user(
                     first_name=validated_data['first_name'],
                     last_name=validated_data['last_name'],
                     username=validated_data['username'],
